@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: smepro-staging
+namespace: ios-plus-staging
 
 resources:
   - ../../base/namespace.yaml
@@ -10,13 +10,17 @@ resources:
   - ../../base/cloudsql-proxy.yaml
 
 images:
-  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/api-gateway
+  - name: api-gateway
+    newName: api-gateway
     newTag: staging-latest
-  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/canonical-layer
+  - name: canonical-layer
+    newName: canonical-layer
     newTag: staging-latest
-  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/ml-persistence
+  - name: ml-persistence
+    newName: ml-persistence
     newTag: staging-latest
-  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/ml-transcript-nlp
+  - name: ml-transcript-nlp
+    newName: ml-transcript-nlp
     newTag: staging-latest
 
 replicas:

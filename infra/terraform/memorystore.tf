@@ -1,5 +1,5 @@
 resource "google_redis_instance" "smepro" {
-  name               = "smepro-cos-redis-${var.environment}"
+  name               = "${var.project_prefix}-redis-${var.environment}"
   tier               = "STANDARD_HA"
   memory_size_gb     = var.environment == "production" ? 8 : 2
   region             = var.region

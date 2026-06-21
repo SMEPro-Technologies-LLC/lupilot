@@ -3,6 +3,12 @@ variable "project_id" {
   type        = string
 }
 
+variable "project_prefix" {
+  description = "Project prefix for resource naming (e.g., 'lamar-ios', 'smepro-cos')"
+  type        = string
+  default     = "ios-plus"
+}
+
 variable "region" {
   description = "GCP Region"
   type        = string
@@ -29,11 +35,11 @@ variable "db_version" {
 variable "gke_cluster_name" {
   description = "GKE cluster name"
   type        = string
-  default     = "smepro-cos-gke"
+  default     = "ios-plus-gke"
 }
 
 variable "domain" {
   description = "Domain for ingress"
   type        = string
-  default     = "smepro-cos.lamar.edu"
+  default     = "ios.lamar.edu"
 }

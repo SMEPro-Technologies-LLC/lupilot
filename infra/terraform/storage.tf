@@ -99,7 +99,7 @@ resource "google_storage_bucket" "trace_chain" {
 }
 
 resource "google_storage_bucket" "tfstate" {
-  name          = "smepro-cos-tfstate"
+  name          = "${var.project_prefix}-tfstate"
   location      = var.region
   storage_class = "STANDARD"
 

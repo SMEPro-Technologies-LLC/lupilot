@@ -2,16 +2,16 @@ apiVersion: skaffold/v4beta7
 kind: Config
 build:
   artifacts:
-    - image: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/api-gateway
+    - image: api-gateway
       context: backend/api-gateway
-    - image: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/canonical-layer
+    - image: canonical-layer
       context: backend/services/canonical-layer
-    - image: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/ml-persistence
+    - image: ml-persistence
       context: ml/jobs/persistence
-    - image: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/ml-transcript-nlp
+    - image: ml-transcript-nlp
       context: ml/jobs/transcript-nlp
   googleCloudBuild:
-    projectId: smepro-cos-shared
+    projectId: ${GCP_PROJECT_SHARED}
     diskSizeGb: 100
     machineType: E2_HIGHCPU_8
     timeout: 3600s

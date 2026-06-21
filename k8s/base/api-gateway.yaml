@@ -25,7 +25,7 @@ spec:
       serviceAccountName: k8s-api-gateway
       containers:
         - name: api-gateway
-          image: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/api-gateway:latest
+          image: api-gateway:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -134,7 +134,7 @@ metadata:
   name: k8s-api-gateway
   namespace: api-gateway
   annotations:
-    iam.gke.io/gcp-service-account: sa-api-gateway@smepro-cos-prod.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: sa-api-gateway@${GCP_PROJECT_ID}.iam.gserviceaccount.com
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

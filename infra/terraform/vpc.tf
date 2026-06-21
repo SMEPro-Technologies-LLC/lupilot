@@ -1,11 +1,11 @@
 resource "google_compute_network" "smepro" {
-  name                    = "smepro-vpc"
+  name                    = "${var.project_prefix}-vpc"
   auto_create_subnetworks = false
   routing_mode            = "GLOBAL"
 }
 
 resource "google_compute_subnetwork" "smepro" {
-  name          = "smepro-subnet"
+  name          = "${var.project_prefix}-subnet"
   ip_cidr_range = "10.0.0.0/16"
   region        = var.region
   network       = google_compute_network.smepro.id
@@ -30,13 +30,13 @@ resource "google_compute_subnetwork" "smepro" {
 }
 
 resource "google_compute_router" "smepro" {
-  name    = "smepro-router"
+  name    = "${var.project_prefix}-router"
   region  = var.region
   network = google_compute_network.smepro.id
 }
 
 resource "google_compute_router_nat" "smepro" {
-  name                               = "smepro-nat"
+  name                               = "${var.project_prefix}-nat"
   router                             = google_compute_router.smepro.name
   region                             = var.region
   nat_ip_allocate_option             = "AUTO_ONLY"
@@ -49,11 +49,11 @@ resource "google_compute_router_nat" "smepro" {
 }
 
 resource "google_compute_global_address" "smepro" {
-  name = "smepro-lb-ip"
+  name = "${var.project_prefix}-lb-ip"
 }
 
 resource "google_compute_firewall" "allow_internal" {
-  name    = "smepro-allow-internal"
+  name    = "${var.project_prefix}-allow-internal"
   network = google_compute_network.smepro.name
 
   allow {
@@ -74,7 +74,7 @@ resource "google_compute_firewall" "allow_internal" {
 }
 
 resource "google_compute_firewall" "allow_health_checks" {
-  name    = "smepro-allow-health-checks"
+  name    = "${var.project_prefix}-allow-health-checks"
   network = google_compute_network.smepro.name
 
   allow {

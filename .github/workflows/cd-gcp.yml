@@ -52,7 +52,7 @@ jobs:
       - name: Deploy via Cloud Deploy
         run: |
           gcloud deploy releases create release-${{ github.run_number }} \
-            --delivery-pipeline=smepro-cos-pipeline \
+            --delivery-pipeline=${{ vars.CLOUD_DEPLOY_PIPELINE || 'ios-plus-pipeline' }} \
             --target=${{ env.ENVIRONMENT }} \
             --source=k8s/overlays/${{ env.ENVIRONMENT }} \
             --images=api-gateway=${{ env.ARTIFACT_REGISTRY }}/api-gateway:${{ github.ref_name }},canonical-layer=${{ env.ARTIFACT_REGISTRY }}/canonical-layer:${{ github.ref_name }}
@@ -76,7 +76,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "SMEPro COS deployed to ${{ env.ENVIRONMENT }}: ${{ job.status }}"
+              "text": "IOS+ deployed to ${{ env.ENVIRONMENT }}: ${{ job.status }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,8 +1,8 @@
 apiVersion: clouddeploy.googleapis.com/v1
 kind: DeliveryPipeline
 metadata:
-  name: smepro-cos-pipeline
-  description: SMEPro COS continuous delivery pipeline to GKE on GCP
+  name: ios-plus-pipeline
+  description: IOS+ continuous delivery pipeline to GKE on GCP
 serialPipeline:
   stages:
     - targetId: staging

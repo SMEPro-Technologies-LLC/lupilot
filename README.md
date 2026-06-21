@@ -1,33 +1,35 @@
 # lupilot
 
-**Lamar University Pilot** — SMEPro Compliance Operating System (COS) deployment on Google Cloud Platform.
+**Lamar University IOS+** — Compliance Operating System (COS) deployment platform.
+
+> **Transfer Note:** This repository is designed for transfer to Lamar University. All organization-specific values are parameterized via environment variables. See `environments/.env.template` and `docs/TRANSFER_GUIDE.md`.
 
 ## Overview
 
-This repository contains the complete infrastructure-as-code, Kubernetes manifests, CI/CD pipelines, and deployment runbooks for the SMEPro COS at Lamar University.
+This repository contains the complete infrastructure-as-code, Kubernetes manifests, CI/CD pipelines, and deployment runbooks for the IOS+ Compliance Operating System.
 
 ## Architecture
 
-- **Cloud:** Google Cloud Platform (us-central1)
-- **Orchestration:** GKE Autopilot
-- **Database:** Cloud SQL PostgreSQL 16
-- **Cache:** Memorystore Redis
-- **Messaging:** Cloud Pub/Sub
-- **Storage:** Cloud Storage (GCS)
-- **Secrets:** Secret Manager + Workload Identity
-- **CI/CD:** GitHub Actions + Cloud Deploy
-- **Monitoring:** Cloud Monitoring + Cloud Logging + Grafana
+- **Cloud:** Google Cloud Platform (parameterized region)
+- **Orchestration:** GKE Autopilot (or on-prem Kubernetes)
+- **Database:** Cloud SQL PostgreSQL 16 (or on-prem PostgreSQL HA)
+- **Cache:** Memorystore Redis (or on-prem Redis)
+- **Messaging:** Cloud Pub/Sub (or Kafka)
+- **Storage:** Cloud Storage (GCS) (or S3-compatible)
+- **Secrets:** Secret Manager + Workload Identity (or HashiCorp Vault)
+- **CI/CD:** GitHub Actions + Cloud Deploy (or self-hosted runners)
+- **Monitoring:** Cloud Monitoring + Cloud Logging + Grafana (or self-hosted Prometheus/Loki)
 
 ## Quick Start
 
 ```bash
 # Clone repository
-git clone https://github.com/SMEPro-Technologies-LLC/lupilot.git
+git clone https://github.com/${GITHUB_ORG}/lupilot.git
 cd lupilot
 
-# Set up GCP authentication
+# Set up GCP authentication (or configure for on-prem)
 gcloud auth login
-gcloud config set project smepro-cos-prod
+gcloud config set project ${GCP_PROJECT_ID}
 
 # Deploy infrastructure (Terraform)
 cd infra/terraform
@@ -38,7 +40,7 @@ terraform apply
 
 # Deploy application (Cloud Deploy)
 gcloud deploy releases create release-$(date +%Y%m%d) \
-  --delivery-pipeline=smepro-cos-pipeline \
+  --delivery-pipeline=${CLOUD_DEPLOY_PIPELINE} \
   --target=production \
   --source=k8s/overlays/production
 ```
@@ -47,18 +49,24 @@ gcloud deploy releases create release-$(date +%Y%m%d) \
 
 | Document | Purpose |
 |----------|---------|
-| `docs/architecture/` | Architecture v2 narrative, deployment spec, diagram layout, repo mapping |
+| `docs/PRODUCTION_READINESS_AND_TRANSFER_PLAN.md` | Master 90-day production readiness plan |
+| `docs/DEPLOYMENT_READINESS_MATRIX.md` | Component-by-component readiness tracker |
+| `docs/TRANSFER_GUIDE.md` | How to transfer to Lamar GitHub org |
+| `docs/ENVIRONMENT_BOOTSTRAP.md` | Bootstrap a new environment from scratch |
+| `docs/OPERATIONS_HANDOFF.md` | Runbooks, incident response, on-call |
+| `docs/SECURITY_MODEL.md` | Threat model, controls, compliance |
+| `docs/BREAK_GLASS_RUNBOOK.md` | Emergency procedures |
 | `docs/DEPLOYMENT_RUNBOOK.md` | Day-by-day deployment procedures |
-| `docs/GITHUB_ACTIONS_SECRETS.md` | GitHub Actions secrets setup guide |
+| `docs/GITHUB_ACTIONS_SECRETS.md` | CI/CD secrets and configuration |
 | `docs/Module3_AI_Governance_Framework.md` | NIST AI RMF governance framework |
-| `docs/SMEPro_COS_Master_Delivery_Summary_2026-06-20.md` | Complete delivery summary |
-| `docs/SMEPro_COS_Meeting_Review_2026-06-20.md` | Board-ready meeting review |
+| `docs/architecture/` | Architecture v2 narrative, deployment spec, diagram layout, repo mapping |
 
 ## Repository Structure
 
 ```
 lupilot/
 ├── .github/workflows/      # GitHub Actions CI/CD
+├── environments/            # Environment variable templates
 ├── infra/
 │   ├── terraform/           # Terraform IaC (GCP)
 │   └── gcp/                 # GCP architecture docs
@@ -68,6 +76,7 @@ lupilot/
 │   └── jobs/                # One-off jobs (Flyway migrations)
 ├── db/migrations/           # PostgreSQL Flyway migrations
 ├── docs/                    # Architecture docs, runbooks, guides
+├── scripts/                 # Utility scripts (transfer-prep, seed-secrets)
 ├── clouddeploy.yaml         # Cloud Deploy pipeline
 ├── skaffold.yaml            # Skaffold build config
 └── README.md                # This file
@@ -83,19 +92,20 @@ lupilot/
 
 ## Security
 
-- **Data never leaves campus.** GKE cluster runs in Lamar-controlled VPC.
+- **Data residency configurable.** On-prem trust boundary supported.
 - **All PII pseudonymized.** SYN IDs replace SSNs at ingestion.
-- **Workload Identity.** No service account keys in GKE.
+- **Workload Identity.** No service account keys in Kubernetes.
 - **Cloud Armor WAF.** SQL injection, XSS, and rate limiting protection.
 - **CMEK encryption.** Customer-managed keys for all storage.
 - **Trace chain.** Immutable blockchain audit trail for governance.
 
 ## License
 
-Proprietary — SMEPro Technologies, LLC. All rights reserved.
+Proprietary — See `docs/TRANSFER_GUIDE.md` for ownership terms.
 
 ## Contact
 
-- **Engineering:** devops@smepro.com
-- **Emergency:** emergency@smepro.com
-- **Support:** support@smepro.com
+- **Primary Owner:** [Lamar University IT]
+- **Engineering:** [ops@lamar.edu]
+- **Emergency:** [emergency@lamar.edu]
+- **Support:** [support@lamar.edu]

@@ -24,7 +24,7 @@ resource "google_pubsub_topic" "smepro" {
 
   labels = {
     environment = var.environment
-    project     = "smepro-cos"
+    project     = var.project_prefix
   }
 }
 

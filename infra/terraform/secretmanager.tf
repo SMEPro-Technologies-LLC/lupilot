@@ -1,4 +1,4 @@
-# Secret Manager secrets for SMEPro COS
+# Secret Manager secrets for IOS+
 locals {
   secrets = [
     "jwt-signing-key",
@@ -24,12 +24,12 @@ resource "google_secret_manager_secret" "smepro" {
 
 # KMS for CMEK
 resource "google_kms_key_ring" "smepro" {
-  name     = "smepro-keyring"
+  name     = "${var.project_prefix}-keyring"
   location = var.region
 }
 
 resource "google_kms_crypto_key" "smepro" {
-  name            = "smepro-cmekey"
+  name            = "${var.project_prefix}-cmekey"
   key_ring        = google_kms_key_ring.smepro.id
   rotation_period = "7776000s"  # 90 days
 

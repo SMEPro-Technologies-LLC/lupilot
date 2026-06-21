@@ -1,5 +1,5 @@
 resource "google_sql_database_instance" "smepro" {
-  name             = "smepro-cos-postgres-${var.environment}"
+  name             = "${var.project_prefix}-postgres-${var.environment}"
   database_version = var.db_version
   region           = var.region
 
@@ -51,12 +51,12 @@ resource "google_sql_database_instance" "smepro" {
 }
 
 resource "google_sql_database" "smepro" {
-  name     = "smepro"
+  name     = var.project_prefix
   instance = google_sql_database_instance.smepro.name
 }
 
 resource "google_sql_user" "smepro" {
-  name     = "smepro"
+  name     = var.project_prefix
   instance = google_sql_database_instance.smepro.name
   password = random_password.db_password.result
 }
@@ -85,7 +85,7 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 }
 
 resource "google_compute_global_address" "smepro_private_ip_alloc" {
-  name          = "smepro-private-ip-alloc"
+  name          = "${var.project_prefix}-private-ip-alloc"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
