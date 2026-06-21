@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudsql-proxy
+  namespace: trust-model
+  labels:
+    app: cloudsql-proxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudsql-proxy
+  template:
+    metadata:
+      labels:
+        app: cloudsql-proxy
+    spec:
+      serviceAccountName: k8s-cloudsql-proxy
+      containers:
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.33.0
+          command:
+            - "/cloud_sql_proxy"
+            - "-instances=smepro-cos-prod:us-central1:smepro-cos-postgres-production=tcp:5432"
+            - "-credential_file=/secrets/service_account.json"
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - name: service-account-key
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            runAsUser: 2
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: service-account-key
+          secret:
+            secretName: cloudsql-service-account
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudsql-proxy
+  namespace: trust-model
+  labels:
+    app: cloudsql-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: cloudsql-proxy
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-cloudsql-proxy
+  namespace: trust-model
+  annotations:
+    iam.gke.io/gcp-service-account: sa-cloudsql@smepro-cos-prod.iam.gserviceaccount.com

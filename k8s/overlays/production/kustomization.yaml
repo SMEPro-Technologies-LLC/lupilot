@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: smepro-production
+
+resources:
+  - ../../base/namespace.yaml
+  - ../../base/configmap.yaml
+  - ../../base/api-gateway.yaml
+  - ../../base/cloudsql-proxy.yaml
+
+images:
+  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/api-gateway
+    newTag: v1.0.0
+  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/canonical-layer
+    newTag: v1.0.0
+  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/ml-persistence
+    newTag: v1.0.0
+  - name: us-central1-docker.pkg.dev/smepro-cos-shared/artifact-registry/smepro/ml-transcript-nlp
+    newTag: v1.0.0
+
+replicas:
+  - name: api-gateway
+    count: 3
+
+patches:
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 2000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 2Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: production
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - api-gateway
+                  topologyKey: kubernetes.io/hostname

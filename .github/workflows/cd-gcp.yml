@@ -1,0 +1,119 @@
+name: CD — Deploy SMEPro COS to GCP
+
+on:
+  push:
+    branches: [develop, main]
+    tags: ['v*']
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  ARTIFACT_REGISTRY: ${{ secrets.GCP_ARTIFACT_REGISTRY }}
+  ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+
+jobs:
+  deploy:
+    name: Deploy to GCP
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP (Workload Identity)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Tag images with release tag
+        run: |
+          for image in api-gateway canonical-layer ml-persistence ml-transcript-nlp; do
+            docker pull ${{ env.ARTIFACT_REGISTRY }}/$image:${{ github.sha }}
+            docker tag ${{ env.ARTIFACT_REGISTRY }}/$image:${{ github.sha }} ${{ env.ARTIFACT_REGISTRY }}/$image:${{ github.ref_name }}
+            docker push ${{ env.ARTIFACT_REGISTRY }}/$image:${{ github.ref_name }}
+          done
+
+      - name: Update Kustomize images
+        run: |
+          cd k8s/overlays/${{ env.ENVIRONMENT }}
+          for image in api-gateway canonical-layer ml-persistence ml-transcript-nlp; do
+            kustomize edit set image ${{ env.ARTIFACT_REGISTRY }}/$image:${{ github.ref_name }}
+          done
+
+      - name: Deploy via Cloud Deploy
+        run: |
+          gcloud deploy releases create release-${{ github.run_number }} \
+            --delivery-pipeline=smepro-cos-pipeline \
+            --target=${{ env.ENVIRONMENT }} \
+            --source=k8s/overlays/${{ env.ENVIRONMENT }} \
+            --images=api-gateway=${{ env.ARTIFACT_REGISTRY }}/api-gateway:${{ github.ref_name }},canonical-layer=${{ env.ARTIFACT_REGISTRY }}/canonical-layer:${{ github.ref_name }}
+
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/api-gateway -n api-gateway --timeout=300s
+
+      - name: Run smoke tests
+        run: |
+          kubectl exec -n api-gateway deployment/api-gateway -- curl -f http://localhost:8080/v1/health/ready
+
+      - name: Run database migrations
+        run: |
+          kubectl apply -f k8s/jobs/flyway-migrate.yaml -n trust-model
+          kubectl wait --for=condition=complete job/flyway-migrate -n trust-model --timeout=300s
+
+      - name: Notify deployment
+        uses: slackapi/slack-github-action@v1
+        if: always()
+        with:
+          payload: |
+            {
+              "text": "SMEPro COS deployed to ${{ env.ENVIRONMENT }}: ${{ job.status }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.7.0'
+
+      - name: Terraform Init
+        run: |
+          cd infra/terraform
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd infra/terraform
+          terraform plan -var-file=environments/${{ env.ENVIRONMENT }}.tfvars -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd infra/terraform
+          terraform apply -auto-approve tfplan

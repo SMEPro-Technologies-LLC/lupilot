@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: api-gateway
+data:
+  NODE_ENV: "production"
+  API_PORT: "8080"
+  API_VERSION: "v1"
+  LOG_LEVEL: "info"
+  DATABASE_POOL_SIZE: "20"
+  DATABASE_TIMEOUT: "5000"
+  REDIS_POOL_SIZE: "10"
+  RATE_LIMIT_WINDOW: "60000"
+  RATE_LIMIT_MAX: "120"
+  JWT_ALGORITHM: "RS256"
+  JWT_EXPIRY: "3600"
+  CORS_ORIGINS: "https://smepro-cos.lamar.edu,https://app.smepro-cos.lamar.edu"
+  TRUST_PROXY: "true"
+  REQUEST_TIMEOUT: "30000"
+  PAGINATION_DEFAULT_LIMIT: "50"
+  PAGINATION_MAX_LIMIT: "500"
+  SYN_ID_PREFIX: "SYN-"
+  FERPA_RETENTION_DAYS: "2555"
+  ETL_BATCH_SIZE: "10000"
+  ML_JOB_TIMEOUT: "300"
+  BIAS_AUDIT_THRESHOLD: "0.80"
+  SHAP_EXPLAINABILITY: "true"
+  TRACE_CHAIN_ENABLED: "true"
+  REGULATORY_CHECK_INTERVAL: "60"
+  COMPLIANCE_ALERT_ESCALATION_HOURS: "4"
+  FEATURE_FLAGS: "{\"uc01_predictive_persistence\":true,\"uc02_transcript_crosswalk\":true,\"uc03_accreditation_gap\":true,\"uc04_outcome_alignment\":true,\"uc05_grading_load\":true,\"uc06_ai_grader\":false,\"uc07_enrollment_funnel\":false,\"uc08_compliance_monitor\":true}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: trust-model
+data:
+  DB_HOST: "127.0.0.1"
+  DB_PORT: "5432"
+  DB_NAME: "smepro"
+  DB_SSL_MODE: "require"
+  DB_SCHEMA: "public"
+  FLYWAY_LOCATIONS: "filesystem:/db/migrations"
+  FLYWAY_BASELINE_ON_MIGRATE: "true"
+  FLYWAY_VALIDATE_ON_MIGRATE: "true"
+  FLYWAY_OUT_OF_ORDER: "false"
+  FLYWAY_CLEAN_DISABLED: "true"
+  ELASTICSEARCH_HOST: "elasticsearch.monitoring.svc.cluster.local"
+  ELASTICSEARCH_PORT: "9200"
+  ELASTICSEARCH_INDEX: "smepro-udm"
+  REDIS_HOST: "redis.monitoring.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pubsub-config
+  namespace: connector-ingestion
+data:
+  PUBSUB_PROJECT_ID: ""
+  PUBSUB_EMULATOR_HOST: ""
+  TOPIC_BANNER_CHANGES: "banner-changes"
+  TOPIC_BLACKBOARD_EVENTS: "blackboard-events"
+  TOPIC_REGULATORY_CHANGES: "regulatory-changes"
+  TOPIC_TRANSCRIPT_SUBMISSIONS: "transcript-submissions"
+  TOPIC_ACC_CREDITATION_EVIDENCE: "accreditation-evidence"
+  TOPIC_ML_JOB_QUEUE: "ml-job-queue"
+  TOPIC_APPROVAL_EVENTS: "approval-events"
+  TOPIC_NOTIFICATION_EVENTS: "notification-events"
+  TOPIC_EVIDENCE_CHAIN: "evidence-chain"
+  TOPIC_COMPLIANCE_ALERTS: "compliance-alerts"
+  TOPIC_BIAS_AUDIT_TRIGGERS: "bias-audit-triggers"
+  TOPIC_MODEL_LIFECYCLE: "model-lifecycle"

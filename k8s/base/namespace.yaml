@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: connector-ingestion
+  labels:
+    name: connector-ingestion
+    environment: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: normalization
+  labels:
+    name: normalization
+    environment: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rules-workflow
+  labels:
+    name: rules-workflow
+    environment: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-jobs
+  labels:
+    name: ml-jobs
+    environment: production
+    gpu-enabled: "true"
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trust-model
+  labels:
+    name: trust-model
+    environment: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: api-gateway
+  labels:
+    name: api-gateway
+    environment: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: frontend-apps
+  labels:
+    name: frontend-apps
+    environment: production
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    environment: production

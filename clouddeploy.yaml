@@ -1,0 +1,33 @@
+apiVersion: clouddeploy.googleapis.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: smepro-cos-pipeline
+  description: SMEPro COS continuous delivery pipeline to GKE on GCP
+serialPipeline:
+  stages:
+    - targetId: staging
+      profiles:
+        - staging
+      strategy:
+        canary:
+          runtimeConfig:
+            kubernetes:
+              serviceNetworking:
+                service: "api-gateway"
+                deployment: "api-gateway"
+          canaryDeployment:
+            percentages: [25, 50, 75]
+            verify: true
+    - targetId: production
+      profiles:
+        - production
+      strategy:
+        canary:
+          runtimeConfig:
+            kubernetes:
+              serviceNetworking:
+                service: "api-gateway"
+                deployment: "api-gateway"
+          canaryDeployment:
+            percentages: [25, 50, 75]
+            verify: true
