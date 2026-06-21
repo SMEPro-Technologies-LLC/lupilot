@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOS+ Edu Reporter — Wave 1 MVP</title>
+<style>
+:root {
+  --bg: #f4f7f6;
+  --text: #1a1a2e;
+  --text-muted: #5a5a6a;
+  --accent: #2c5aa0;
+  --green: #2e7d32;
+  --orange: #e65100;
+  --gold: #f9a825;
+  --red: #c62828;
+  --teal: #00695c;
+  --light-blue: #e6f0fa;
+  --light-green: #e8f5e9;
+  --light-orange: #fff3e0;
+  --light-purple: #f0e6ff;
+  --light-red: #ffebee;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-hover: 0 8px 24px rgba(0,0,0,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 260px;
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.logo { font-size: 1.2rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.logo-sub { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.5px; }
+.role-badge { background: var(--light-blue); color: var(--accent); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; margin-bottom: 20px; display: inline-block; }
+.nav-group { margin-bottom: 20px; }
+.nav-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600; }
+.nav-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); transition: all 0.2s; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.nav-item:hover { background: #f5f5f5; color: var(--text); }
+.nav-item.active { background: var(--light-blue); color: var(--accent); font-weight: 600; }
+.main { flex: 1; padding: 24px 32px; overflow-y: auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.header h1 { font-size: 1.5rem; color: var(--text); }
+.header-meta { font-size: 0.8rem; color: var(--text-muted); }
+.cards { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.card { background: #fff; border-radius: 12px; padding: 20px 24px; min-width: 200px; flex: 1; box-shadow: var(--shadow); border-left: 4px solid transparent; }
+.card-critical { border-left-color: var(--red); }
+.card-warning { border-left-color: var(--orange); }
+.card-elevated { border-left-color: var(--gold); }
+.card-low { border-left-color: var(--green); }
+.card h3 { font-size: 2rem; margin-bottom: 4px; }
+.card h3.critical { color: var(--red); }
+.card h3.warning { color: var(--orange); }
+.card h3.elevated { color: var(--gold); }
+.card h3.low { color: var(--green); }
+.card p { font-size: 0.85rem; color: var(--text-muted); }
+.card .change { font-size: 0.75rem; margin-top: 4px; color: var(--text-muted); }
+.table-container { background: #fff; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px; }
+.table-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+.table-header h2 { font-size: 1rem; color: var(--text); }
+.btn { padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #1e4a8a; }
+.btn-secondary { background: #f0f0f0; color: var(--text); }
+.btn-secondary:hover { background: #e0e0e0; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; font-size: 0.85rem; }
+th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+tr { border-bottom: 1px solid #f0f0f0; }
+tr:hover { background: #f8f9fa; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.badge-red { background: var(--light-red); color: var(--red); }
+.badge-orange { background: var(--light-orange); color: var(--orange); }
+.badge-green { background: var(--light-green); color: var(--green); }
+.badge-blue { background: var(--light-blue); color: var(--accent); }
+.badge-purple { background: var(--light-purple); color: var(--purple); }
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+.error { text-align: center; padding: 40px; color: var(--red); }
+.status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.status-up { background: var(--green); }
+.status-down { background: var(--red); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">IOS+</div>
+    <div class="logo-sub">Edu Reporter — Wave 1 MVP</div>
+    <div class="role-badge" id="role-badge">Advisor View</div>
+    <div class="nav-group">
+      <div class="nav-label">Objectives</div>
+      <div class="nav-item active" onclick="loadUC('uc-01')" id="nav-uc-01">UC-01 · Persistence</div>
+      <div class="nav-item" onclick="loadUC('uc-02')" id="nav-uc-02">UC-02 · Transcript</div>
+      <div class="nav-item" onclick="loadUC('uc-03')" id="nav-uc-03">UC-03 · Accreditation</div>
+      <div class="nav-item" onclick="loadUC('uc-04')" id="nav-uc-04">UC-04 · Alignment</div>
+      <div class="nav-item" onclick="loadUC('uc-05')" id="nav-uc-05">UC-05 · Grading Load</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="showAPIStatus()">API Status</div>
+    </div>
+  </div>
+  <div class="main" id="main-content">
+    <div class="header">
+      <h1 id="page-title">Predictive Persistence — UC-01</h1>
+      <div class="header-meta" id="page-meta">Loading...</div>
+    </div>
+    <div id="content">
+      <div class="loading">Loading data from API...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '/api';
+let currentUC = 'uc-01';
+
+const ucConfig = {
+  'uc-01': { title: 'Predictive Persistence — UC-01', role: 'Advisor', roleBadge: 'Advisor View' },
+  'uc-02': { title: 'Transcript Crosswalk — UC-02', role: 'Registrar', roleBadge: 'Registrar View' },
+  'uc-03': { title: 'Accreditation Gap Analysis — UC-03', role: 'Accreditation Liaison', roleBadge: 'Accreditation View' },
+  'uc-04': { title: 'Outcome Alignment Auditor — UC-04', role: 'Department Chair', roleBadge: 'Chair View' },
+  'uc-05': { title: 'Grading Load Analyzer — UC-05', role: 'Dean', roleBadge: 'Dean View' }
+};
+
+async function fetchData(endpoint) {
+  try {
+    const response = await fetch(`${API_BASE}/v1/${endpoint}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (err) {
+    console.error('API fetch failed:', err);
+    return null;
+  }
+}
+
+function setLoading() {
+  document.getElementById('content').innerHTML = '<div class="loading">Loading data from API...</div>';
+}
+
+function showError(msg) {
+  document.getElementById('content').innerHTML = `<div class="error">Error: ${msg}</div>`;
+}
+
+function renderUC01(data) {
+  if (!data) return showError('Failed to load UC-01 data');
+  const { green_count, yellow_count, red_count, total_students, students, major_concentrations } = data;
+  
+  const html = `
+    <div class="cards">
+      <div class="card card-low"><h3 class="low">${green_count}</h3><p>Green Tier</p></div>
+      <div class="card card-elevated"><h3 class="elevated">${yellow_count}</h3><p>Yellow Tier</p></div>
+      <div class="card card-critical"><h3 class="critical">${red_count}</h3><p>Red Tier</p></div>
+      <div class="card"><h3>${total_students}</h3><p>Total Students</p></div>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>Red-Tier Worklist</h2><button class="btn btn-primary">Export CSV</button></div>
+      <table>
+        <thead><tr><th>SYN ID</th><th>Score</th><th>Tier</th><th>Top Factors</th><th>Notes</th></tr></thead>
+        <tbody>
+          ${students.filter(s => s.tier === 'Red').slice(0, 20).map(s => `
+            <tr>
+              <td>${s.syn_id}</td>
+              <td><strong>${s.composite_score}</strong></td>
+              <td><span class="badge badge-red">${s.tier}</span></td>
+              <td>${s.top_factors.join('; ')}</td>
+              <td>${s.advisor_notes || '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>Major Concentration</h2></div>
+      <table>
+        <thead><tr><th>Major</th><th>Red %</th><th>Yellow %</th><th>Green %</th></tr></thead>
+        <tbody>
+          ${major_concentrations.map(m => `
+            <tr><td>${m.major}</td><td>${m.red_pct}%</td><td>${m.yellow_pct}%</td><td>${m.green_pct}%</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderUC02(data) {
+  if (!data) return showError('Failed to load UC-02 data');
+  const { approved_count, pending_count, rejected_count, modified_count, items } = data;
+  
+  const html = `
+    <div class="cards">
+      <div class="card card-low"><h3 class="low">${approved_count}</h3><p>Approved</p></div>
+      <div class="card card-elevated"><h3 class="elevated">${modified_count}</h3><p>Modified</p></div>
+      <div class="card card-warning"><h3 class="warning">${pending_count}</h3><p>Pending</p></div>
+      <div class="card card-critical"><h3 class="critical">${rejected_count}</h3><p>Rejected</p></div>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>Transcript Queue</h2><button class="btn btn-primary">Process Queue</button></div>
+      <table>
+        <thead><tr><th>ID</th><th>Source</th><th>Course</th><th>Credits</th><th>LU Equivalent</th><th>Confidence</th><th>Band</th><th>Status</th></tr></thead>
+        <tbody>
+          ${items.map(item => `
+            <tr>
+              <td>${item.transcript_id}</td>
+              <td>${item.source_institution}</td>
+              <td>${item.source_course}</td>
+              <td>${item.source_credits}</td>
+              <td>${item.lu_equivalent || '-'}</td>
+              <td><strong>${(item.confidence_score * 100).toFixed(0)}%</strong></td>
+              <td><span class="badge ${item.ecs_band === 'High' ? 'badge-green' : item.ecs_band === 'Medium' ? 'badge-elevated' : 'badge-red'}">${item.ecs_band}</span></td>
+              <td><span class="badge ${item.status === 'Approved' ? 'badge-green' : item.status === 'Pending' ? 'badge-orange' : 'badge-red'}">${item.status}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderUC03(data) {
+  if (!data) return showError('Failed to load UC-03 data');
+  const { standards, overall_score, critical_gaps } = data;
+  
+  const html = `
+    <div class="cards">
+      <div class="card"><h3>${overall_score}%</h3><p>Overall Compliance</p></div>
+      <div class="card card-critical"><h3 class="critical">${critical_gaps}</h3><p>Critical Gaps</p></div>
+      <div class="card"><h3>${standards.length}</h3><p>Standards Assessed</p></div>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>Standards Heat Map</h2><button class="btn btn-primary">Generate Report</button></div>
+      <table>
+        <thead><tr><th>Standard</th><th>Name</th><th>Score</th><th>Evidence</th><th>Status</th><th>Gaps</th></tr></thead>
+        <tbody>
+          ${standards.map(s => `
+            <tr>
+              <td>${s.standard_id}</td>
+              <td>${s.standard_name}</td>
+              <td><strong>${s.compliance_score}%</strong></td>
+              <td>${s.evidence_count} files</td>
+              <td><span class="badge ${s.status === 'Compliant' ? 'badge-green' : 'badge-orange'}">${s.status}</span></td>
+              <td>${s.gaps.length ? s.gaps.join('; ') : 'None'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderUC04(data) {
+  if (!data) return showError('Failed to load UC-04 data');
+  const { flag_count, critical_count, warning_count, flags } = data;
+  
+  const html = `
+    <div class="cards">
+      <div class="card"><h3>${flag_count}</h3><p>Total Flags</p></div>
+      <div class="card card-critical"><h3 class="critical">${critical_count}</h3><p>Critical</p></div>
+      <div class="card card-warning"><h3 class="warning">${warning_count}</h3><p>Warning</p></div>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>Alignment Flags</h2><button class="btn btn-primary">Email Chairs</button></div>
+      <table>
+        <thead><tr><th>Flag ID</th><th>Course</th><th>Type</th><th>Severity</th><th>Description</th><th>Action</th><th>Status</th></tr></thead>
+        <tbody>
+          ${flags.map(f => `
+            <tr>
+              <td>${f.flag_id}</td>
+              <td>${f.course_id}</td>
+              <td>${f.flag_type}</td>
+              <td><span class="badge ${f.severity === 'Critical' ? 'badge-red' : f.severity === 'Warning' ? 'badge-orange' : 'badge-blue'}">${f.severity}</span></td>
+              <td>${f.description}</td>
+              <td>${f.suggested_action}</td>
+              <td><span class="badge ${f.status === 'Resolved' ? 'badge-green' : 'badge-orange'}">${f.status}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderUC05(data) {
+  if (!data) return showError('Failed to load UC-05 data');
+  const { critical_sections, high_sections, gli_data, college_summary } = data;
+  
+  const html = `
+    <div class="cards">
+      <div class="card card-critical"><h3 class="critical">${critical_sections}</h3><p>Critical Sections</p></div>
+      <div class="card card-warning"><h3 class="warning">${high_sections}</h3><p>High Sections</p></div>
+      <div class="card"><h3>${gli_data.length}</h3><p>Total Sections</p></div>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>Grading Load Index</h2><button class="btn btn-primary">Reallocate GA Hours</button></div>
+      <table>
+        <thead><tr><th>Section</th><th>Course</th><th>Enrollment</th><th>Weight</th><th>Items</th><th>Rubric</th><th>GLI</th><th>Tier</th><th>GA Hours</th></tr></thead>
+        <tbody>
+          ${gli_data.map(g => `
+            <tr>
+              <td>${g.section_id}</td>
+              <td>${g.course_name}</td>
+              <td>${g.enrollment}</td>
+              <td>${g.weight}%</td>
+              <td>${g.items}</td>
+              <td>${g.rubric_complexity}</td>
+              <td><strong>${g.gli}</strong></td>
+              <td><span class="badge ${g.tier === 'Critical' ? 'badge-red' : g.tier === 'High' ? 'badge-orange' : 'badge-green'}">${g.tier}</span></td>
+              <td>${g.ga_hours_recommended}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>College Summary</h2></div>
+      <table>
+        <thead><tr><th>College</th><th>Avg GLI</th><th>Sections</th><th>Total GA Hours</th></tr></thead>
+        <tbody>
+          ${college_summary.map(c => `
+            <tr><td>${c.college}</td><td>${c.avg_gli}</td><td>${c.total_sections}</td><td>${c.total_ga_hours}</td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+async function loadUC(uc) {
+  currentUC = uc;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`nav-${uc}`).classList.add('active');
+  
+  const config = ucConfig[uc];
+  document.getElementById('page-title').textContent = config.title;
+  document.getElementById('role-badge').textContent = config.roleBadge;
+  document.getElementById('page-meta').textContent = 'Loading...';
+  
+  setLoading();
+  const data = await fetchData(uc);
+  document.getElementById('page-meta').textContent = data ? `Generated at ${new Date(data.generated_at).toLocaleString()}` : 'Error loading data';
+  
+  if (uc === 'uc-01') renderUC01(data);
+  else if (uc === 'uc-02') renderUC02(data);
+  else if (uc === 'uc-03') renderUC03(data);
+  else if (uc === 'uc-04') renderUC04(data);
+  else if (uc === 'uc-05') renderUC05(data);
+}
+
+async function showAPIStatus() {
+  document.getElementById('page-title').textContent = 'System Status';
+  document.getElementById('page-meta').textContent = 'Checking API health...';
+  setLoading();
+  
+  const [live, ready] = await Promise.all([
+    fetch(`${API_BASE}/v1/health/live`).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(`${API_BASE}/v1/health/ready`).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]);
+  
+  const html = `
+    <div class="cards">
+      <div class="card ${live ? 'card-low' : 'card-critical'}">
+        <h3 class="${live ? 'low' : 'critical'}">${live ? '● UP' : '● DOWN'}</h3>
+        <p>Live Probe</p>
+      </div>
+      <div class="card ${ready ? 'card-low' : 'card-critical'}">
+        <h3 class="${ready ? 'low' : 'critical'}">${ready ? '● UP' : '● DOWN'}</h3>
+        <p>Ready Probe</p>
+      </div>
+    </div>
+    <div class="table-container">
+      <div class="table-header"><h2>API Endpoints</h2></div>
+      <table>
+        <thead><tr><th>Endpoint</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>/v1/health/live</td><td><span class="badge ${live ? 'badge-green' : 'badge-red'}">${live ? 'UP' : 'DOWN'}</span></td></tr>
+          <tr><td>/v1/health/ready</td><td><span class="badge ${ready ? 'badge-green' : 'badge-red'}">${ready ? 'UP' : 'DOWN'}</span></td></tr>
+          <tr><td>/v1/uc-01</td><td><span class="badge badge-blue">Available</span></td></tr>
+          <tr><td>/v1/uc-02</td><td><span class="badge badge-blue">Available</span></td></tr>
+          <tr><td>/v1/uc-03</td><td><span class="badge badge-blue">Available</span></td></tr>
+          <tr><td>/v1/uc-04</td><td><span class="badge badge-blue">Available</span></td></tr>
+          <tr><td>/v1/uc-05</td><td><span class="badge badge-blue">Available</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+// Load UC-01 on startup
+loadUC('uc-01');
+</script>
+</body>
+</html>

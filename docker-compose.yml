@@ -1,0 +1,141 @@
+version: "3.8"
+
+# ============================================================
+# IOS+ / Edu Reporter — Wave 1 MVP On-Prem Stack
+# Simulates UC-01 through UC-05 with synthetic data
+# ============================================================
+
+services:
+  # PostgreSQL — Canonical data store + synthetic student records
+  postgres:
+    image: postgres:16-alpine
+    container_name: ios-plus-postgres
+    environment:
+      POSTGRES_USER: ios_admin
+      POSTGRES_PASSWORD: ios_local_dev
+      POSTGRES_DB: ios_plus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ios_admin -d ios_plus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ios-plus
+
+  # Redis — Session cache and job state
+  redis:
+    image: redis:7-alpine
+    container_name: ios-plus-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ios-plus
+
+  # Edu Reporter API — Core business logic for UC-01 to UC-05
+  edu-reporter-api:
+    build:
+      context: ../services/edu-reporter-api
+      dockerfile: Dockerfile
+    container_name: ios-plus-edu-reporter-api
+    environment:
+      - DATABASE_URL=postgresql://ios_admin:ios_local_dev@postgres:5432/ios_plus
+      - REDIS_URL=redis://redis:6379/0
+      - PORT=8080
+      - LOG_LEVEL=info
+      - ENVIRONMENT=local
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ios-plus
+    restart: unless-stopped
+
+  # API Gateway — Routing, auth, rate limiting
+  api-gateway:
+    build:
+      context: ../services/api-gateway
+      dockerfile: Dockerfile
+    container_name: ios-plus-api-gateway
+    environment:
+      - PORT=3000
+      - EDU_REPORTER_API_URL=http://edu-reporter-api:8080
+      - REDIS_URL=redis://redis:6379/1
+      - LOG_LEVEL=info
+      - JWT_SECRET=local-dev-jwt-secret-change-in-production
+    ports:
+      - "3000:3000"
+    depends_on:
+      edu-reporter-api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ios-plus
+    restart: unless-stopped
+
+  # Frontend — Edu Reporter web application
+  frontend:
+    build:
+      context: ../frontend/edu-reporter
+      dockerfile: Dockerfile
+    container_name: ios-plus-frontend
+    environment:
+      - API_BASE_URL=http://api-gateway:3000
+      - PORT=80
+    ports:
+      - "80:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - ios-plus
+    restart: unless-stopped
+
+  # Mock Data Generator — Populates synthetic student records on startup
+  mock-data-generator:
+    build:
+      context: ../services/mock-data-generator
+      dockerfile: Dockerfile
+    container_name: ios-plus-mock-data
+    environment:
+      - DATABASE_URL=postgresql://ios_admin:ios_local_dev@postgres:5432/ios_plus
+      - SYNTHETIC_STUDENT_COUNT=500
+      - SYNTHETIC_COURSE_COUNT=200
+      - SYNTHETIC_TRANSCRIPT_COUNT=150
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ios-plus
+    restart: "no"
+
+volumes:
+  postgres_data:
+
+networks:
+  ios-plus:
+    driver: bridge
